@@ -7,11 +7,10 @@ public class Application extends Controller {
 
 	public static void index() {
 
-		Grid grid = new Grid(15, 11);
-		grid.generateRandomBlackCells(20);
+		//Grid grid = new Grid(15, 11);
+		//grid.generateRandomBlackCells(20);
 
 		// cycle
-
 		// grid.addBlackCell(7, 4);
 		// grid.addBlackCell(8, 4);
 		// grid.addBlackCell(7, 5);
@@ -25,6 +24,6 @@ public class Application extends Controller {
 		// System.out.println(cell.getCellOnDown());
 		// System.out.println(cell.getCellOnDownRight());
 
-		render(grid);
+		//render(grid);
 	}
 }
