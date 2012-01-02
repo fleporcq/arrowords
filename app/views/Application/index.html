@@ -1,0 +1,38 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+<style type="text/css">
+    table.grid{
+        border-collapse:collapse;
+    }
+    table.grid td{
+        width:50px;
+        height:50px;
+        text-align:center;
+        vertical-align:middle;
+        border: 1px solid #D1D1D1;
+
+    }
+    table.grid td.black-cell{
+        /*background:#FFFFC9;*/
+        background:#666;
+        color:#000;
+    }
+    table.grid td.white-cell{
+        background:#FFF;
+        color:#000;
+    }
+</style>
+<ul>
+    <li>Nombre de cases total = ${grid.size()}</li>
+    <li>Nombre de cases noires = ${grid.countBlackCells()}</li>
+    <li>Pourcentage de cases noires = ${grid.countBlackCells()/grid.size()*100}%</li>
+</ul>
+<table class="grid">
+#{list items:1..grid.getHeight(), as:'y'}
+    <tr>
+    #{list items:1..grid.getWidth(), as:'x'}
+        <td class="${(grid.get(x,y) instanceof models.BlackCell) ? 'black' : 'white'}-cell">${x},${y}</td>
+    #{/list}
+    </tr>
+#{/list}
+</table>

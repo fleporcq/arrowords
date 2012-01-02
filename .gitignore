@@ -1,0 +1,6 @@
+.*
+!.gitignore
+/tmp
+/eclipse
+/modules
+/lib
