@@ -5,11 +5,11 @@ import play.mvc.Controller;
 
 public class Application extends Controller {
 
-	public static void index() {
+    public static void index() {
 
-		Grid grid = new Grid(15, 11);
-		grid.generateRandomBlackCells(20);
+        Grid grid = new Grid(15, 11);
+        grid.generateRandomBlackCells(20, 2);
 
-		render(grid);
-	}
+        render(grid);
+    }
 }

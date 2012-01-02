@@ -12,267 +12,291 @@ import enums.Direction;
 
 public class Grid extends ArrayList<Cell> {
 
-	private int width;
+    private int width;
 
-	private int height;
+    private int height;
 
-	private int blackCellsCount;
+    private int blackCellsCount;
 
-	public Grid(int width, int height) {
+    public Grid(int width, int height) {
 
-		this.width = width;
-		this.height = height;
+        this.width = width;
+        this.height = height;
 
-		// Calcul de la capacité
-		int capacity = this.width * this.height;
+        // Calcul de la capacité
+        int capacity = this.width * this.height;
 
-		// Création d'une grille vide
-		List<Cell> whiteCells = Collections.nCopies(capacity, null);
-		this.addAll(whiteCells);
+        // Création d'une grille vide
+        List<Cell> whiteCells = Collections.nCopies(capacity, null);
+        this.addAll(whiteCells);
 
-		// Ajout des cases blanches
-		for (int i = 0; i < capacity; i++) {
-			WhiteCell whiteCell = new WhiteCell();
-			whiteCell.setX(getXForIndex(i));
-			whiteCell.setY(getYForIndex(i));
-			this.addCell(whiteCell);
-		}
+        // Ajout des cases blanches
+        for (int i = 0; i < capacity; i++) {
+            WhiteCell whiteCell = new WhiteCell();
+            whiteCell.setX(this.getXForIndex(i));
+            whiteCell.setY(this.getYForIndex(i));
+            this.addCell(whiteCell);
+        }
 
-	}
+    }
 
-	public Cell get(int x, int y) {
-		int index;
-		Cell cell = null;
-		try {
-			index = this.getIndexForPosition(x, y);
-			cell = this.get(index);
-		} catch (IndexOutOfBoundsException e) {
+    public Cell get(int x, int y) {
+        int index;
+        Cell cell = null;
+        try {
+            index = this.getIndexForPosition(x, y);
+            cell = this.get(index);
+        }
+        catch (IndexOutOfBoundsException e) {
 
-		}
-		return cell;
-	}
+        }
+        return cell;
+    }
 
-	public void addWhiteCell(int x, int y) {
-		WhiteCell whiteCell = new WhiteCell();
-		whiteCell.setX(x);
-		whiteCell.setY(y);
-		addCell(whiteCell);
-	}
+    public WhiteCell addWhiteCell(int x, int y) {
+        WhiteCell whiteCell = new WhiteCell();
+        whiteCell.setX(x);
+        whiteCell.setY(y);
+        if (this.addCell(whiteCell)) {
+            return whiteCell;
+        }
+        return null;
+    }
 
-	public void addBlackCell(int x, int y) {
-		BlackCell blackCell = new BlackCell();
-		blackCell.setX(x);
-		blackCell.setY(y);
-		if (addCell(blackCell)) {
-			this.blackCellsCount++;
-		}
-		if (hasCycle(blackCell, null)) {
-			removeBlackCell(blackCell);
-		}
-	}
+    public BlackCell addBlackCell(int x, int y) {
+        BlackCell blackCell = new BlackCell();
+        blackCell.setX(x);
+        blackCell.setY(y);
 
-	public boolean addCell(Cell cell) {
-		boolean added = false;
-		int x = cell.getX();
-		int y = cell.getY();
-		if (x < 1 || x > this.width) {
-			Logger.error("x[%s] n'est pas dans la grille ", x);
-		} else if (y < 1 || y > this.height) {
-			Logger.error("y[%s] n'est pas dans la grille ", y);
-		} else {
-			this.setConnectedCells(cell);
-			int index = this.getIndexForPosition(x, y);
-			this.set(index, cell);
-			added = true;
+        if (this.addCell(blackCell)) {
+            this.blackCellsCount++;
+            return blackCell;
+        }
+        return null;
 
-		}
-		return added;
-	}
+    }
 
-	private void setConnectedCells(Cell cell) {
-		// Ajoute les cases connexes à la case
-		for (int x = -1; x <= 1; x++) {
-			for (int y = -1; y <= 1; y++) {
-				if (x != 0 || y != 0) {
-					Cell possibleConnexion = this.get(cell.getX() + x,
-							cell.getY() + y);
-					if (possibleConnexion != null) {
-						cell.addConnexion(possibleConnexion);
-						possibleConnexion.addConnexion(cell);
-					}
-				}
-			}
-		}
+    public boolean addCell(Cell cell) {
+        boolean added = false;
+        int x = cell.getX();
+        int y = cell.getY();
+        if (x < 1 || x > this.width) {
+            Logger.error("x[%s] n'est pas dans la grille ", x);
+        }
+        else if (y < 1 || y > this.height) {
+            Logger.error("y[%s] n'est pas dans la grille ", y);
+        }
+        else {
+            this.setConnectedCells(cell);
+            int index = this.getIndexForPosition(x, y);
+            this.set(index, cell);
+            added = true;
 
-	}
+        }
+        return added;
+    }
 
-	private List<BlackCell> checkedBlackCells;
+    private void setConnectedCells(Cell cell) {
+        // Ajoute les cases connexes à la case
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                if (x != 0 || y != 0) {
+                    Cell possibleConnexion = this.get(cell.getX() + x, cell.getY() + y);
+                    if (possibleConnexion != null) {
+                        cell.addConnexion(possibleConnexion);
+                        possibleConnexion.addConnexion(cell);
+                    }
+                }
+            }
+        }
 
-	public boolean hasCycle(BlackCell blackCell, BlackCell previousBlackCell) {
+    }
 
-		boolean cycle = false;
-		if (previousBlackCell == null) {
-			this.checkedBlackCells = new ArrayList<BlackCell>();
-		}
-		if (checkedBlackCells.contains(blackCell)) {
-			cycle = true;
-			System.out.println("Cycle detecté");
-		} else {
-			checkedBlackCells.add(blackCell);
-			Iterator<Entry<Direction, Cell>> iterator = blackCell
-					.getConnexions().entrySet().iterator();
+    public boolean isCyclic(BlackCell blackCell, BlackCell previousBlackCell, List<BlackCell> checkedBlackCells) {
 
-			while (iterator.hasNext()) {
-				Entry pair = iterator.next();
-				Cell connexion = (Cell) pair.getValue();
+        boolean cycle = false;
+        if (previousBlackCell == null) {
+            checkedBlackCells = new ArrayList<BlackCell>();
+        }
 
-				if (connexion instanceof BlackCell
-						&& connexion != previousBlackCell) {
+        if (checkedBlackCells.contains(blackCell)) {
+            cycle = true;
+        }
+        else {
+            checkedBlackCells.add(blackCell);
+            Iterator<Entry<Direction, Cell>> iterator = blackCell.getConnexions().entrySet().iterator();
 
-					cycle = hasCycle((BlackCell) connexion, blackCell);
-					if (cycle) {
-						break;
-					}
-				}
-			}
-		}
-		return cycle;
-	}
+            while (iterator.hasNext()) {
+                Entry pair = iterator.next();
+                Cell connexion = (Cell) pair.getValue();
 
-	private void removeBlackCell(BlackCell blackCell) {
-		removeBlackCell(blackCell.getX(), blackCell.getY());
-	}
+                if (connexion instanceof BlackCell && connexion != previousBlackCell) {
 
-	public void removeBlackCell(int x, int y) {
-		int index = this.getIndexForPosition(x, y);
+                    cycle = this.isCyclic((BlackCell) connexion, blackCell, checkedBlackCells);
+                    if (cycle) {
+                        break;
+                    }
+                }
+            }
+        }
+        return cycle;
+    }
 
-		Object cell = this.get(index);
-		if (cell instanceof BlackCell) {
+    public boolean isMaxAlign(BlackCell blackCell, int maxAlign) {
 
-			BlackCell blackCell = (BlackCell) cell;
+        int horizontalCount = blackCell.countBlackCellOnLeft() + blackCell.countBlackCellOnRight();
+        int verticalCount = blackCell.countBlackCellOnUp() + blackCell.countBlackCellOnDown();
 
-			// On retire la case noire de toutes les connexions
-			Iterator<Entry<Direction, Cell>> iterator = blackCell
-					.getConnexions().entrySet().iterator();
-			while (iterator.hasNext()) {
-				Entry pair = iterator.next();
-				Cell connexion = (Cell) pair.getValue();
-				connexion.removeConnexion(blackCell);
-			}
+        if (horizontalCount >= maxAlign || verticalCount >= maxAlign) {
+            return true;
+        }
 
-			this.set(index, null);
-			this.blackCellsCount--;
-		}
-	}
+        return false;
+    }
 
-	public void generateRandomBlackCells(int percent) {
-		// Création de la case noire en haut à gauche
-		this.addBlackCell(1, 1);
+    private void removeBlackCell(BlackCell blackCell) {
+        this.removeBlackCell(blackCell.getX(), blackCell.getY());
+    }
 
-		// Création de cases noires 1 fois sur 2 sur la première ligne
-		// horizontale
-		for (int i = 3; i <= this.width; i += 2) {
-			this.addBlackCell(i, 1);
-		}
+    public void removeBlackCell(int x, int y) {
+        int index = this.getIndexForPosition(x, y);
 
-		// Création de cases noires 1 fois sur 2 sur la première ligne verticale
-		for (int i = 3; i <= this.height; i += 2) {
-			this.addBlackCell(1, i);
-		}
+        Object cell = this.get(index);
+        if (cell instanceof BlackCell) {
 
-		// TODO: voir pour légérement faire varier le pourcentage aléatoirement
-		// Génération aleatoire des cases restantes
-		while (this.blackCellsCount < percent * this.size() / 100) {
+            BlackCell blackCell = (BlackCell) cell;
 
-			Random randomX = new Random();
-			Random randomY = new Random();
-			int x = 2 + randomX.nextInt(this.width + 1 - 2);
-			int y = 2 + randomY.nextInt(this.height + 1 - 2);
+            // On retire la case noire de toutes les connexions
+            Iterator<Entry<Direction, Cell>> iterator = blackCell.getConnexions().entrySet().iterator();
+            while (iterator.hasNext()) {
+                Entry pair = iterator.next();
+                Cell connexion = (Cell) pair.getValue();
+                connexion.removeConnexion(blackCell);
+            }
 
-			// si la position peut être occupée
-			if (this.isPossibleBlackCellPosition(x, y)) {
-				this.addBlackCell(x, y);
-			}
+            this.set(index, null);
+            this.blackCellsCount--;
+        }
+    }
 
-		}
+    public void generateRandomBlackCells(int percent, int maxAlign) {
+        // Création de la case noire en haut à gauche
+        this.addBlackCell(1, 1);
 
-	}
+        // Création de cases noires 1 fois sur 2 sur la première ligne
+        // horizontale
+        for (int i = 3; i <= this.width; i += 2) {
+            this.addBlackCell(i, 1);
+        }
 
-	private boolean isPossibleBlackCellPosition(int x, int y) {
-		boolean possiblePosition = true;
+        // Création de cases noires 1 fois sur 2 sur la première ligne verticale
+        for (int i = 3; i <= this.height; i += 2) {
+            this.addBlackCell(1, i);
+        }
 
-		// Si la case est déjà occupé
-		if (this.get(x, y) instanceof BlackCell) {
-			possiblePosition = false;
-		}
+        // TODO: voir pour légérement faire varier le pourcentage aléatoirement
+        // Génération aleatoire des cases restantes
+        while (this.blackCellsCount < percent * this.size() / 100) {
 
-		// Si on est sur la 2ème ligne et que x est pair
-		if (y == 2 && x % 2 == 0) {
-			possiblePosition = false;
-		}
-		// Si on est sur la 2ème colonne et que y est pair
-		if (x == 2 && y % 2 == 0) {
-			possiblePosition = false;
-		}
+            Random randomX = new Random();
+            Random randomY = new Random();
+            int x = 2 + randomX.nextInt(this.width + 1 - 2);
+            int y = 2 + randomY.nextInt(this.height + 1 - 2);
 
-		// Si on est sur la dernière case de la deuxième colonne
-		if (x == 2 && y == this.height) {
-			possiblePosition = false;
-		}
+            // si la position peut être occupée
+            if (this.isPossibleBlackCellPosition(x, y)) {
 
-		// Si on est sur la dernière case de la deuxième ligne
-		if (y == 2 && x == this.width) {
-			possiblePosition = false;
-		}
+                BlackCell blackCell = this.addBlackCell(x, y);
 
-		// Si la case n'est pas une des 4 dernières de la grille ( carré en bas
-		// à droite)
-		if (x == this.width && y == this.height) {
-			possiblePosition = false;
-		}
-		if (x == this.width - 1 && y == this.height) {
-			possiblePosition = false;
-		}
-		if (x == this.width && y == this.height - 1) {
-			possiblePosition = false;
-		}
-		if (x == this.width - 1 && y == this.height - 1) {
-			possiblePosition = false;
-		}
+                // Si l'ajout de la case provoque un cycle on la retire
+                if (this.isCyclic(blackCell, null, null)) {
+                    this.removeBlackCell(blackCell);
+                }
+                // Si l'ajout de la case provoque un alignement supérieur au max autorisé on la retire
+                else if (maxAlign > 0 && this.isMaxAlign(blackCell, maxAlign)) {
+                    this.removeBlackCell(blackCell);
+                }
+            }
 
-		return possiblePosition;
-	}
+        }
 
-	public int countBlackCells() {
-		return this.blackCellsCount;
-	}
+    }
 
-	private int getIndexForPosition(int x, int y) {
-		return (y * this.width) - (this.width - x) - 1;
-	}
+    private boolean isPossibleBlackCellPosition(int x, int y) {
+        boolean possiblePosition = true;
 
-	public int getYForIndex(int index) {
-		return (index / width) + 1;
-	}
+        // Si la case est déjà occupé
+        if (this.get(x, y) instanceof BlackCell) {
+            possiblePosition = false;
+        }
 
-	public int getXForIndex(int index) {
-		return (index % width) + 1;
-	}
+        // Si on est sur la 2ème ligne et que x est pair
+        if (y == 2 && x % 2 == 0) {
+            possiblePosition = false;
+        }
+        // Si on est sur la 2ème colonne et que y est pair
+        if (x == 2 && y % 2 == 0) {
+            possiblePosition = false;
+        }
 
-	public int getWidth() {
-		return this.width;
-	}
+        // Si on est sur la dernière case de la deuxième colonne
+        if (x == 2 && y == this.height) {
+            possiblePosition = false;
+        }
 
-	public void setWidth(int width) {
-		this.width = width;
-	}
+        // Si on est sur la dernière case de la deuxième ligne
+        if (y == 2 && x == this.width) {
+            possiblePosition = false;
+        }
 
-	public int getHeight() {
-		return this.height;
-	}
+        // Si la case n'est pas une des 4 dernières de la grille ( carré en bas
+        // à droite)
+        if (x == this.width && y == this.height) {
+            possiblePosition = false;
+        }
+        if (x == this.width - 1 && y == this.height) {
+            possiblePosition = false;
+        }
+        if (x == this.width && y == this.height - 1) {
+            possiblePosition = false;
+        }
+        if (x == this.width - 1 && y == this.height - 1) {
+            possiblePosition = false;
+        }
 
-	public void setHeight(int height) {
-		this.height = height;
-	}
+        return possiblePosition;
+    }
+
+    public int countBlackCells() {
+        return this.blackCellsCount;
+    }
+
+    private int getIndexForPosition(int x, int y) {
+        return (y * this.width) - (this.width - x) - 1;
+    }
+
+    public int getYForIndex(int index) {
+        return (index / this.width) + 1;
+    }
+
+    public int getXForIndex(int index) {
+        return (index % this.width) + 1;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
 
 }
