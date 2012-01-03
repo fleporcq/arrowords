@@ -11,7 +11,8 @@ public class Application extends Controller {
         Grid grid = new Grid(15, 11);
 
         // Génération pseudo aléatoire des cases noires
-        grid.generateRandomBlackCells(20, 2);
+        grid.generatePseudoRandomBlackCells(20, 2);
+        // grid.generateRandomBlackCells(20, 2);
 
         render(grid);
     }
