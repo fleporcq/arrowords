@@ -9,26 +9,6 @@ import enums.Direction;
 
 public class BlackCell extends Cell {
 
-    private String firstDefinition;
-
-    private String secondDefinition;
-
-    public String getFirstDefinition() {
-        return this.firstDefinition;
-    }
-
-    public void setFirstDefinition(String firstDefinition) {
-        this.firstDefinition = firstDefinition;
-    }
-
-    public String getSecondDefinition() {
-        return this.secondDefinition;
-    }
-
-    public void setSecondDefinition(String secondDefinition) {
-        this.secondDefinition = secondDefinition;
-    }
-
     public boolean isExceedingMaxAlign(int maxAlign) {
         if (maxAlign < 1) {
             return false;
@@ -67,6 +47,39 @@ public class BlackCell extends Cell {
             if (connexion instanceof BlackCell && connexion != previousBlackCell) {
 
                 if (((BlackCell) connexion).isCreatingCycle(this, checkedBlackCells)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isExceedingMaxConnectedBlacCells(int max) {
+        if (max < 1) {
+            return false;
+        }
+        return this.isExceedingMaxConnectedBlacCells(max, null, null);
+    }
+
+    private boolean isExceedingMaxConnectedBlacCells(int max, BlackCell previousBlackCell, List<BlackCell> connectedBlackCells) {
+        if (previousBlackCell == null) {
+            connectedBlackCells = new ArrayList<BlackCell>();
+        }
+
+        if (connectedBlackCells.size() > max - 1) {
+            return true;
+        }
+
+        Iterator<Entry<Direction, Cell>> iterator = this.getConnexions().entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Entry pair = iterator.next();
+            Cell connexion = (Cell) pair.getValue();
+
+            if (connexion instanceof BlackCell && connexion != previousBlackCell) {
+                connectedBlackCells.add((BlackCell) connexion);
+                if (((BlackCell) connexion).isExceedingMaxConnectedBlacCells(max, this, connectedBlackCells)) {
                     return true;
                 }
             }

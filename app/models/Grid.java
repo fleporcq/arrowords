@@ -87,13 +87,13 @@ public class Grid extends ArrayList<Cell> {
     private void resetCell(Cell cell) {
 
         this.setWhiteCell(cell.getX(), cell.getY());
-        Logger.debug("Reset cell : %s", cell);
+        // Logger.debug("Reset cell : %s", cell);
         if (cell instanceof BlackCell) {
             this.blackCellsCount--;
         }
     }
 
-    public void generatePseudoRandomBlackCells(int percent, int maxAlign) {
+    public void generatePseudoRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
         // Création de la case noire en haut à gauche
         this.setBlackCell(1, 1);
 
@@ -108,11 +108,11 @@ public class Grid extends ArrayList<Cell> {
             this.setBlackCell(1, i);
         }
 
-        this.generateRandomBlackCells(percent, maxAlign);
+        this.generateRandomBlackCells(percent, maxAlign, maxConnectedBlackCells);
 
     }
 
-    public void generateRandomBlackCells(int percent, int maxAlign) {
+    public void generateRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
 
         // TODO: voir pour légérement faire varier le pourcentage aléatoirement
         // Génération aleatoire des cases restantes tant qu'on a pas atteint le pourcentage requis
@@ -138,7 +138,12 @@ public class Grid extends ArrayList<Cell> {
                     Logger.debug("Border cycle detected " + blackCell);
                     this.resetCell(blackCell);
                 }
-                // Si l'ajout de la case provoque un alignement supérieur au max autorisé on la retire
+                // Si l'ajout de la case provoque une connexion de cases noires supérieur au max autorisé on la retire
+                else if (blackCell.isExceedingMaxConnectedBlacCells(maxConnectedBlackCells)) {
+                    Logger.debug("Maximum connected black cells exceeded");
+                    this.resetCell(blackCell);
+                }
+                // // Si l'ajout de la case provoque un alignement supérieur au max autorisé on la retire
                 else if (blackCell.isExceedingMaxAlign(maxAlign)) {
                     Logger.debug("Maximum alignment exceeded");
                     this.resetCell(blackCell);

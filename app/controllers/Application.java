@@ -8,11 +8,12 @@ public class Application extends Controller {
     public static void index() {
 
         // Création d'une grille
-        Grid grid = new Grid(15, 11);
+        Grid grid = new Grid(15, 15);
 
         // Génération pseudo aléatoire des cases noires
-        grid.generatePseudoRandomBlackCells(20, 2);
-        // grid.generateRandomBlackCells(20, 2);
+
+        grid.generatePseudoRandomBlackCells(20, 2, 3);
+        // grid.generateRandomBlackCells(20, 2, 3);
 
         render(grid);
     }
