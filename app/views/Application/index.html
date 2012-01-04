@@ -31,7 +31,7 @@
 #{list items:1..grid.getHeight(), as:'y'}
     <tr>
     #{list items:1..grid.getWidth(), as:'x'}
-        <td class="${(grid.get(x,y) instanceof models.BlackCell) ? 'black' : 'white'}-cell">${x},${y}</td>
+        <td class="${(grid.getCell(x,y) instanceof models.BlackCell) ? 'black' : 'white'}-cell">${x},${y}</td>
     #{/list}
     </tr>
 #{/list}

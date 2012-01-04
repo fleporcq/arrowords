@@ -1,6 +1,8 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import enums.Direction;
@@ -33,7 +35,7 @@ public abstract class Cell {
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 if (x != 0 || y != 0) {
-                    Cell possibleConnexion = grid.get(this.getX() + x, this.getY() + y);
+                    Cell possibleConnexion = grid.getCell(this.getX() + x, this.getY() + y);
                     if (possibleConnexion != null) {
                         this.addConnexion(possibleConnexion);
                         possibleConnexion.addConnexion(this);
@@ -109,6 +111,22 @@ public abstract class Cell {
             return 1 + whiteCell.countWhiteCellsOn(direction);
         }
         return 0;
+    }
+
+    public List<WhiteCell> getWhiteCellsOn(Direction direction) {
+        List<WhiteCell> whiteCells = new ArrayList<WhiteCell>();
+        return this.getWhiteCellsOn(direction, whiteCells);
+    }
+
+    private List<WhiteCell> getWhiteCellsOn(Direction direction, List<WhiteCell> whiteCells) {
+        Cell cell = this.getCellOn(direction);
+
+        if (cell instanceof WhiteCell) {
+
+            whiteCells.add((WhiteCell) cell);
+            return cell.getWhiteCellsOn(direction, whiteCells);
+        }
+        return whiteCells;
     }
 
     public int getX() {

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Random;
 
 import play.Logger;
+import enums.Axis;
+import enums.Direction;
 
 public class Grid extends ArrayList<Cell> {
 
@@ -15,10 +17,20 @@ public class Grid extends ArrayList<Cell> {
 
     private int blackCellsCount;
 
-    public Grid(int width, int height) {
+    private int wordMinLength;
+
+    private List<GridWord> words;
+
+    public Grid(int width, int height, int wordMinLength) {
+
+        if (wordMinLength < 2) {
+            Logger.error("La longueur minimale d'un mot doit être 2");
+        }
 
         this.width = width;
         this.height = height;
+
+        this.wordMinLength = wordMinLength;
 
         // Calcul de la capacité
         int capacity = this.width * this.height;
@@ -34,7 +46,7 @@ public class Grid extends ArrayList<Cell> {
 
     }
 
-    public Cell get(int x, int y) {
+    public Cell getCell(int x, int y) {
         int index;
         Cell cell = null;
         try {
@@ -93,7 +105,7 @@ public class Grid extends ArrayList<Cell> {
         }
     }
 
-    public void generatePseudoRandomBlackCells(int percent, int wordMinLength, int maxAlign, int maxConnectedBlackCells) {
+    public void generatePseudoRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
 
         // Création de cases noires 1 fois sur 2 sur la première ligne
         // horizontale
@@ -106,11 +118,11 @@ public class Grid extends ArrayList<Cell> {
             this.setBlackCell(1, i);
         }
 
-        this.generateRandomBlackCells(percent, wordMinLength, maxAlign, maxConnectedBlackCells);
+        this.generateRandomBlackCells(percent, maxAlign, maxConnectedBlackCells);
 
     }
 
-    public void generateRandomBlackCells(int percent, int wordMinLength, int maxAlign, int maxConnectedBlackCells) {
+    public void generateRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
 
         // Création de la case noire en haut à gauche
         this.setBlackCell(1, 1);
@@ -129,7 +141,7 @@ public class Grid extends ArrayList<Cell> {
 
                 BlackCell blackCell = this.setBlackCell(x, y);
                 // Si l'ajout de la case créé des mots de taille incorrecte
-                if (blackCell.isCreatingIncorrectWordLength(wordMinLength)) {
+                if (blackCell.isCreatingIncorrectWordLength(this.wordMinLength)) {
                     Logger.debug("Create orphan black cells %s", blackCell);
                     this.resetCell(blackCell);
                 }
@@ -160,8 +172,41 @@ public class Grid extends ArrayList<Cell> {
 
     }
 
+    public List<GridWord> createGridWords() {
+
+        this.words = new ArrayList<GridWord>();
+
+        for (int y = 1; y <= this.height; y++) {
+            for (int x = 1; x <= this.width; x++) {
+                Cell currentCell = this.getCell(x, y);
+                Cell cellOnLeft = currentCell.getCellOn(Direction.LEFT);
+                Cell cellOnUp = currentCell.getCellOn(Direction.UP);
+
+                // Recherche des mots horizontaux
+                if (currentCell instanceof WhiteCell && !(cellOnLeft instanceof WhiteCell) && currentCell.countWhiteCellsOn(Direction.RIGHT) >= this.wordMinLength - 1) {
+                    GridWord word = new GridWord();
+                    word.add((WhiteCell) currentCell);
+                    word.addAll(currentCell.getWhiteCellsOn(Direction.RIGHT));
+                    word.setAxis(Axis.HORIZONTAL);
+                    this.words.add(word);
+                    Logger.debug("word created %s", word);
+                }
+                // Recherche des mots verticaux
+                if (currentCell instanceof WhiteCell && !(cellOnUp instanceof WhiteCell) && currentCell.countWhiteCellsOn(Direction.DOWN) >= this.wordMinLength - 1) {
+                    GridWord word = new GridWord();
+                    word.add((WhiteCell) currentCell);
+                    word.addAll(currentCell.getWhiteCellsOn(Direction.DOWN));
+                    word.setAxis(Axis.VERTICAL);
+                    this.words.add(word);
+                    Logger.debug("word created %s", word);
+                }
+            }
+        }
+        return this.words;
+    }
+
     private boolean isPossibleBlackCellPosition(int x, int y) {
-        Cell cell = this.get(x, y);
+        Cell cell = this.getCell(x, y);
         // Si la case est déjà occupé
         if (cell instanceof WhiteCell) {
             return true;
