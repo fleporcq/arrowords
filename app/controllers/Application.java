@@ -11,7 +11,7 @@ public class Application extends Controller {
     public static void index() {
 
         // Création d'une grille
-        Grid grid = new Grid(10, 10, 3);
+        Grid grid = new Grid(10, 10, 2);
 
         // Génération pseudo aléatoire des cases noires
         grid.generatePseudoRandomBlackCells(20, 3, 4);
