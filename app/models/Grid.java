@@ -93,9 +93,7 @@ public class Grid extends ArrayList<Cell> {
         }
     }
 
-    public void generatePseudoRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
-        // Création de la case noire en haut à gauche
-        this.setBlackCell(1, 1);
+    public void generatePseudoRandomBlackCells(int percent, int wordMinLength, int maxAlign, int maxConnectedBlackCells) {
 
         // Création de cases noires 1 fois sur 2 sur la première ligne
         // horizontale
@@ -108,11 +106,14 @@ public class Grid extends ArrayList<Cell> {
             this.setBlackCell(1, i);
         }
 
-        this.generateRandomBlackCells(percent, maxAlign, maxConnectedBlackCells);
+        this.generateRandomBlackCells(percent, wordMinLength, maxAlign, maxConnectedBlackCells);
 
     }
 
-    public void generateRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
+    public void generateRandomBlackCells(int percent, int wordMinLength, int maxAlign, int maxConnectedBlackCells) {
+
+        // Création de la case noire en haut à gauche
+        this.setBlackCell(1, 1);
 
         // TODO: voir pour légérement faire varier le pourcentage aléatoirement
         // Génération aleatoire des cases restantes tant qu'on a pas atteint le pourcentage requis
@@ -127,25 +128,29 @@ public class Grid extends ArrayList<Cell> {
             if (this.isPossibleBlackCellPosition(x, y)) {
 
                 BlackCell blackCell = this.setBlackCell(x, y);
-
+                // Si l'ajout de la case créé des mots de taille incorrecte
+                if (blackCell.isCreatingIncorrectWordLength(wordMinLength)) {
+                    Logger.debug("Create orphan black cells %s", blackCell);
+                    this.resetCell(blackCell);
+                }
                 // Si l'ajout de la case provoque un cycle on la retire
-                if (blackCell.isCreatingCycle()) {
-                    Logger.debug("Cycle detected");
+                else if (blackCell.isCreatingCycle()) {
+                    Logger.debug("Cycle detected %s", blackCell);
                     this.resetCell(blackCell);
                 }
                 // Si l'ajout de la case provoque un faux cycle en bord de grille on la retire
                 else if (blackCell.isCreatingBorderCycle()) {
-                    Logger.debug("Border cycle detected " + blackCell);
+                    Logger.debug("Border cycle detected %s", blackCell);
                     this.resetCell(blackCell);
                 }
                 // Si l'ajout de la case provoque une connexion de cases noires supérieur au max autorisé on la retire
                 else if (blackCell.isExceedingMaxConnectedBlacCells(maxConnectedBlackCells)) {
-                    Logger.debug("Maximum connected black cells exceeded");
+                    Logger.debug("Maximum connected black cells exceeded %s", blackCell);
                     this.resetCell(blackCell);
                 }
-                // // Si l'ajout de la case provoque un alignement supérieur au max autorisé on la retire
+                // Si l'ajout de la case provoque un alignement supérieur au max autorisé on la retire
                 else if (blackCell.isExceedingMaxAlign(maxAlign)) {
-                    Logger.debug("Maximum alignment exceeded");
+                    Logger.debug("Maximum alignment exceeded %s", blackCell);
                     this.resetCell(blackCell);
                 }
 
@@ -158,26 +163,10 @@ public class Grid extends ArrayList<Cell> {
     private boolean isPossibleBlackCellPosition(int x, int y) {
         Cell cell = this.get(x, y);
         // Si la case est déjà occupé
-        if (cell instanceof BlackCell) {
-            return false;
+        if (cell instanceof WhiteCell) {
+            return true;
         }
-
-        // Si la case n'est pas une des 4 dernières de la grille ( carré en bas
-        // à droite)
-        if (x == this.width && y == this.height) {
-            return false;
-        }
-        if (x == this.width - 1 && y == this.height) {
-            return false;
-        }
-        if (x == this.width && y == this.height - 1) {
-            return false;
-        }
-        if (x == this.width - 1 && y == this.height - 1) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     public int countBlackCells() {
