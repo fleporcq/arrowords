@@ -10,12 +10,13 @@ import play.Logger;
 
 public class Dictionary {
 
-    private static final int MAXLENGTH = 25;
+    private static final int ALPHABET_LENGTH = 26;
+    private static final int WORD_MAX_LENGTH = 25;
     private String content;
 
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
-        this.setDistribution(MAXLENGTH);
+        this.setDistribution(WORD_MAX_LENGTH);
     }
 
     public List<String> findAll(String search) {
@@ -65,12 +66,13 @@ public class Dictionary {
 
     private void setDistribution(int maxLength) {
 
-        for (int i = 1; i <= maxLength; i++) {
+        for (int lettersCount = 1; lettersCount <= maxLength; lettersCount++) {
             StringBuilder pattern = new StringBuilder();
-            for (int j = 0; j < i; j++) {
+            for (int j = 0; j < lettersCount; j++) {
                 pattern.append(".");
             }
-            Logger.info("Length : %s, Count : %s", i, this.findAll(pattern.toString()).size());
+            int wordsCount = this.findAll(pattern.toString()).size();
+            Logger.info("Length : %s, Count : %s, Score : %s", lettersCount, wordsCount, wordsCount / Math.pow(ALPHABET_LENGTH, lettersCount));
         }
     }
 
