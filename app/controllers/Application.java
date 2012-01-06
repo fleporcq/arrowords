@@ -1,10 +1,7 @@
 package controllers;
 
-import java.util.List;
-
 import models.Dictionary;
 import models.Grid;
-import models.GridWord;
 import play.mvc.Controller;
 
 public class Application extends Controller {
@@ -16,11 +13,14 @@ public class Application extends Controller {
 
         // Génération pseudo aléatoire des cases noires
         grid.generatePseudoRandomBlackCells(20, 3, 4);
-        List<GridWord> words = grid.createGridWords();
+        // Création des mots vide
+        grid.createGridWords();
+        // Résolution de la grille
+        grid.solve(new Dictionary("fr.txt"));
+        // Vérification de la solution
+        grid.checkSolution();
 
-        Dictionary dictionary = new Dictionary("fr.txt");
-        grid.solve(dictionary);
-
+        // Affichage de la grille
         render(grid);
     }
 }

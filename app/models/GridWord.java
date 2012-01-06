@@ -36,11 +36,13 @@ public class GridWord extends ArrayList<WhiteCell> {
     }
 
     public void setContent(String word) {
-        int wordLength = word.length();
-        if (wordLength == this.size()) {
-            char[] letters = word.toCharArray();
-            for (int i = 0; i < wordLength; i++) {
-                this.get(i).setLetter(letters[i]);
+        if (word != null) {
+            int wordLength = word.length();
+            if (wordLength == this.size()) {
+                char[] letters = word.toCharArray();
+                for (int i = 0; i < wordLength; i++) {
+                    this.get(i).setLetter(letters[i]);
+                }
             }
         }
     }

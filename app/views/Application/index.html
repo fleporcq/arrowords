@@ -32,7 +32,7 @@
     <tr>
     #{list items:1..grid.getWidth(), as:'x'}
         #{set cell:grid.getCell(x,y)/}
-        <td class="${(cell instanceof models.BlackCell) ? 'black' : 'white'}-cell">
+        <td class="${(cell instanceof models.BlackCell) ? 'black' : 'white'}-cell" title="(${cell.getX()},${cell.getY()})">
             ${(cell instanceof models.WhiteCell) ? cell.getLetter() : ''}
         </td>
     #{/list}

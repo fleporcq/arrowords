@@ -6,13 +6,16 @@ import java.util.Random;
 
 import jregex.Matcher;
 import jregex.Pattern;
+import play.Logger;
 
 public class Dictionary {
 
+    private static final int MAXLENGTH = 25;
     private String content;
 
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
+        this.setDistribution(MAXLENGTH);
     }
 
     public List<String> findAll(String search) {
@@ -58,5 +61,20 @@ public class Dictionary {
         }
 
         return word;
+    }
+
+    private void setDistribution(int maxLength) {
+
+        for (int i = 1; i <= maxLength; i++) {
+            StringBuilder pattern = new StringBuilder();
+            for (int j = 0; j < i; j++) {
+                pattern.append(".");
+            }
+            Logger.info("Length : %s, Count : %s", i, this.findAll(pattern.toString()).size());
+        }
+    }
+
+    public boolean checkWord(String word) {
+        return (this.findAll(word).size() > 0) ? true : false;
     }
 }

@@ -21,6 +21,8 @@ public class Grid extends ArrayList<Cell> {
 
     private List<GridWord> words;
 
+    private Dictionary dictionary;
+
     public Grid(int width, int height, int wordMinLength) {
 
         if (wordMinLength < 2) {
@@ -215,14 +217,32 @@ public class Grid extends ArrayList<Cell> {
     }
 
     public void solve(Dictionary dictionary) {
-        if (this.words != null && this.words.size() > 0) {
-            GridWord gridWord = this.words.get(0);
-            String content = gridWord.contentAsString();
-            String word = dictionary.getRandomWord(content, null);
-
-            gridWord.setContent(word);
-
+        if (dictionary != null) {
+            this.dictionary = dictionary;
+            for (GridWord gridWord : this.words) {
+                String word = this.dictionary.getRandomWord(gridWord.contentAsString(), null);
+                gridWord.setContent(word);
+            }
         }
+    }
+
+    public boolean checkSolution() {
+        boolean solved = true;
+        if (this.dictionary != null) {
+
+            for (GridWord gridWord : this.words) {
+                String word = gridWord.contentAsString();
+                if (!this.dictionary.checkWord(word)) {
+                    if (solved) {
+                        solved = false;
+                    }
+                    Logger.info("The word '%s' doesn't exist in the dictionary", word);
+                }
+            }
+            return solved;
+        }
+        Logger.debug("Dictionary is null");
+        return false;
     }
 
     public int countBlackCells() {
