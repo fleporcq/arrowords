@@ -214,6 +214,17 @@ public class Grid extends ArrayList<Cell> {
         return false;
     }
 
+    public void solve(Dictionary dictionary) {
+        if (this.words != null && this.words.size() > 0) {
+            GridWord gridWord = this.words.get(0);
+            String content = gridWord.contentAsString();
+            String word = dictionary.getRandomWord(content, null);
+
+            gridWord.setContent(word);
+
+        }
+    }
+
     public int countBlackCells() {
         return this.blackCellsCount;
     }
