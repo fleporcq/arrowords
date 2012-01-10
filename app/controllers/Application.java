@@ -16,7 +16,8 @@ public class Application extends Controller {
         // Création des mots vide
         grid.createGridWords();
         // Résolution de la grille
-        grid.solve(new Dictionary("fr.txt"));
+        Dictionary dictionary = new Dictionary("fr.txt");
+        grid.solve(dictionary);
         // Vérification de la solution
         grid.checkSolution();
 

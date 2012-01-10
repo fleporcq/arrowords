@@ -6,17 +6,15 @@ import java.util.Random;
 
 import jregex.Matcher;
 import jregex.Pattern;
-import play.Logger;
 
 public class Dictionary {
 
-    private static final int ALPHABET_LENGTH = 26;
-    private static final int WORD_MAX_LENGTH = 25;
+    // private static final int WORD_MAX_LENGTH = 25;
     private String content;
 
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
-        this.setDistribution(WORD_MAX_LENGTH);
+        // this.setDistribution(WORD_MAX_LENGTH);
     }
 
     public List<String> findAll(String search) {
@@ -38,9 +36,13 @@ public class Dictionary {
 
         List<String> allWords = this.findAll(search);
         Random random = new Random();
-        int randomIndex = random.nextInt(allWords.size());
+        int countMatches = allWords.size();
 
-        return allWords.get(randomIndex);
+        if (countMatches > 0) {
+            return allWords.get(random.nextInt(countMatches));
+        }
+        return null;
+
     }
 
     public String getRandomWord(String search, List<String> notIn) {
@@ -64,17 +66,20 @@ public class Dictionary {
         return word;
     }
 
-    private void setDistribution(int maxLength) {
-
-        for (int lettersCount = 1; lettersCount <= maxLength; lettersCount++) {
-            StringBuilder pattern = new StringBuilder();
-            for (int j = 0; j < lettersCount; j++) {
-                pattern.append(".");
-            }
-            int wordsCount = this.findAll(pattern.toString()).size();
-            Logger.info("Length : %s, Count : %s, Score : %s", lettersCount, wordsCount, wordsCount / Math.pow(ALPHABET_LENGTH, lettersCount));
-        }
-    }
+    // private void setDistribution(int maxLength) {
+    //
+    // for (int lettersCount = 1; lettersCount <= maxLength; lettersCount++) {
+    // StringBuilder pattern = new StringBuilder();
+    // for (int j = 0; j < lettersCount; j++) {
+    // pattern.append(".");
+    // }
+    // int wordsCount = this.findAll(pattern.toString()).size();
+    //
+    // Float complexity = Float.valueOf(wordsCount) / lettersCount;
+    //
+    // Logger.info("Length : %s, Count : %s, Complexity : %s", lettersCount, wordsCount, complexity);
+    // }
+    // }
 
     public boolean checkWord(String word) {
         return (this.findAll(word).size() > 0) ? true : false;

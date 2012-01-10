@@ -2,8 +2,10 @@ package models;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.Stack;
 
 import play.Logger;
 import enums.Axis;
@@ -19,7 +21,7 @@ public class Grid extends ArrayList<Cell> {
 
     private int wordMinLength;
 
-    private List<GridWord> words;
+    private Stack<GridWord> words;
 
     private Dictionary dictionary;
 
@@ -176,7 +178,7 @@ public class Grid extends ArrayList<Cell> {
 
     public List<GridWord> createGridWords() {
 
-        this.words = new ArrayList<GridWord>();
+        this.words = new Stack<GridWord>();
 
         for (int y = 1; y <= this.height; y++) {
             for (int x = 1; x <= this.width; x++) {
@@ -217,13 +219,47 @@ public class Grid extends ArrayList<Cell> {
     }
 
     public void solve(Dictionary dictionary) {
+
         if (dictionary != null) {
+
             this.dictionary = dictionary;
-            for (GridWord gridWord : this.words) {
-                String word = this.dictionary.getRandomWord(gridWord.contentAsString(), null);
-                gridWord.setContent(word);
+
+            Stack<GridWord> solvedWords = new Stack<GridWord>();
+            int countWordsToSolve = this.words.size();
+
+            while (solvedWords.size() < countWordsToSolve) {
+                System.out.println(solvedWords.size() + "/" + countWordsToSolve);
+                this.sortWordsByComplexity();
+                GridWord gridWord = this.words.pop();
+
+                String word = this.dictionary.getRandomWord(gridWord.contentAsString(), gridWord.getNotIn());
+
+                if (word != null) {
+                    gridWord.setContent(word);
+                    solvedWords.push(gridWord);
+                }
+                else {
+                    gridWord.resetNotIn();
+                    this.words.push(gridWord);
+
+                    GridWord previousWord = solvedWords.pop();
+                    previousWord.resetContent();
+                    this.words.push(previousWord);
+                }
             }
+
         }
+    }
+
+    private void sortWordsByComplexity() {
+        Collections.sort(this.words, new Comparator<GridWord>() {
+            @Override
+            public int compare(GridWord gw1, GridWord gw2) {
+                Float c1 = Float.valueOf(gw1.getComplexity());
+                Float c2 = Float.valueOf(gw2.getComplexity());
+                return c1.compareTo(c2);
+            }
+        });
     }
 
     public boolean checkSolution() {
