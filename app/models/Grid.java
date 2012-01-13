@@ -21,7 +21,7 @@ public class Grid extends ArrayList<Cell> {
 
     private int wordMinLength;
 
-    private Stack<GridWord> words;
+    private List<GridWord> words;
 
     private Dictionary dictionary;
 
@@ -192,6 +192,7 @@ public class Grid extends ArrayList<Cell> {
                     word.add((WhiteCell) currentCell);
                     word.addAll(currentCell.getWhiteCellsOn(Direction.RIGHT));
                     word.setAxis(Axis.HORIZONTAL);
+
                     this.words.add(word);
                     Logger.debug("word created %s", word);
                 }
@@ -201,11 +202,17 @@ public class Grid extends ArrayList<Cell> {
                     word.add((WhiteCell) currentCell);
                     word.addAll(currentCell.getWhiteCellsOn(Direction.DOWN));
                     word.setAxis(Axis.VERTICAL);
+
                     this.words.add(word);
                     Logger.debug("word created %s", word);
                 }
             }
         }
+
+        for (GridWord word : this.words) {
+            word.setCrossWord(this);
+        }
+
         return this.words;
     }
 
@@ -224,39 +231,20 @@ public class Grid extends ArrayList<Cell> {
 
             this.dictionary = dictionary;
 
-            Stack<GridWord> solvedWords = new Stack<GridWord>();
-            int countWordsToSolve = this.words.size();
-
-            while (solvedWords.size() < countWordsToSolve) {
-                System.out.println(solvedWords.size() + "/" + countWordsToSolve);
-                this.sortWordsByComplexity();
-                GridWord gridWord = this.words.pop();
-
-                String word = this.dictionary.getRandomWord(gridWord.contentAsString(), gridWord.getNotIn());
-
-                if (word != null) {
-                    gridWord.setContent(word);
-                    solvedWords.push(gridWord);
-                }
-                else {
-                    gridWord.resetNotIn();
-                    this.words.push(gridWord);
-
-                    GridWord previousWord = solvedWords.pop();
-                    previousWord.resetContent();
-                    this.words.push(previousWord);
-                }
-            }
-
         }
     }
 
-    private void sortWordsByComplexity() {
-        Collections.sort(this.words, new Comparator<GridWord>() {
+    private void sortWordsByComplexity(Stack<GridWord> wordsToSolve) {
+        Collections.sort(wordsToSolve, new Comparator<GridWord>() {
             @Override
+            // public int compare(GridWord gw1, GridWord gw2) {
+            // Float c1 = Float.valueOf(gw1.getMyComplexity());
+            // Float c2 = Float.valueOf(gw2.getMyComplexity());
+            // return c2.compareTo(c1);
+            // }
             public int compare(GridWord gw1, GridWord gw2) {
-                Float c1 = Float.valueOf(gw1.getComplexity());
-                Float c2 = Float.valueOf(gw2.getComplexity());
+                Float c1 = gw1.getComplexity();
+                Float c2 = gw2.getComplexity();
                 return c1.compareTo(c2);
             }
         });
@@ -279,6 +267,10 @@ public class Grid extends ArrayList<Cell> {
         }
         Logger.debug("Dictionary is null");
         return false;
+    }
+
+    public List<GridWord> getWords() {
+        return this.words;
     }
 
     public int countBlackCells() {

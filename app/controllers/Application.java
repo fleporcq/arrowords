@@ -13,11 +13,14 @@ public class Application extends Controller {
 
         // Génération pseudo aléatoire des cases noires
         grid.generatePseudoRandomBlackCells(20, 3, 4);
+
         // Création des mots vide
         grid.createGridWords();
+
         // Résolution de la grille
         Dictionary dictionary = new Dictionary("fr.txt");
         grid.solve(dictionary);
+
         // Vérification de la solution
         grid.checkSolution();
 

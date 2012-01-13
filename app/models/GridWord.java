@@ -9,12 +9,10 @@ public class GridWord extends ArrayList<WhiteCell> {
 
     private Axis axis;
 
-    private String previousContent;
-
-    private List<String> notIn;
+    private List<GridWord> crossWords;
 
     public GridWord() {
-        this.notIn = new ArrayList<String>();
+
     }
 
     public Axis getAxis() {
@@ -46,28 +44,18 @@ public class GridWord extends ArrayList<WhiteCell> {
 
     public void setContent(String word) {
         if (word != null) {
+
             int wordLength = word.length();
+
             if (wordLength == this.size()) {
-                this.previousContent = this.contentAsString();
+
                 char[] letters = word.toCharArray();
                 for (int i = 0; i < wordLength; i++) {
                     this.get(i).setLetter(letters[i]);
                 }
+
             }
         }
-    }
-
-    public void resetContent() {
-        this.notIn.add(this.contentAsString());
-        this.setContent(this.previousContent);
-    }
-
-    public List<String> getNotIn() {
-        return this.notIn;
-    }
-
-    public void resetNotIn() {
-        this.notIn.clear();
     }
 
     public int countLetters() {
@@ -80,11 +68,32 @@ public class GridWord extends ArrayList<WhiteCell> {
         return lettersCount;
     }
 
-    public Integer getComplexity() {
+    public Float getComplexity() {
         int lettersCount = this.countLetters();
         int length = this.getLength();
-        return ((lettersCount + 1) * length) + length;
-        // return lettersCount;
+        return lettersCount / Float.valueOf(length);
+    }
+
+    // public int getMyComplexity() {
+    // int lettersCount = this.countLetters();
+    // int length = this.getLength();
+    // return ((lettersCount + 1) * length) + length;
+    // }
+
+    public void setCrossWord(Grid grid) {
+        this.crossWords = new ArrayList<GridWord>();
+        for (WhiteCell cell : this) {
+            List<GridWord> words = cell.getWords(grid);
+            for (GridWord word : words) {
+                if (word != this) {
+                    this.crossWords.add(word);
+                }
+            }
+        }
+    }
+
+    public List<GridWord> getTransverseWords() {
+        return this.crossWords;
     }
 
     @Override
