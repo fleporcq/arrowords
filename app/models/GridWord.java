@@ -11,8 +11,35 @@ public class GridWord extends ArrayList<WhiteCell> {
 
     private List<GridWord> crossWords;
 
-    public GridWord() {
+    private String previousContent;
 
+    private List<String> notIn;
+
+    public GridWord() {
+        this.notIn = new ArrayList<String>();
+    }
+
+    public void savePreviousContent() {
+        this.previousContent = this.contentAsString();
+    }
+
+    public void loadPreviousContent() {
+        if (this.previousContent != null) {
+            this.setContent(this.previousContent);
+            this.previousContent = null;
+        }
+    }
+
+    public void addNotIn(String word) {
+        this.notIn.add(word);
+    }
+
+    public void clearNotIn() {
+        this.notIn.clear();
+    }
+
+    public List<String> getNotIn() {
+        return this.notIn;
     }
 
     public Axis getAxis() {
@@ -74,11 +101,11 @@ public class GridWord extends ArrayList<WhiteCell> {
         return lettersCount / Float.valueOf(length);
     }
 
-    // public int getMyComplexity() {
-    // int lettersCount = this.countLetters();
-    // int length = this.getLength();
-    // return ((lettersCount + 1) * length) + length;
-    // }
+    public int getMyComplexity() {
+        int lettersCount = this.countLetters();
+        int length = this.getLength();
+        return ((lettersCount + 1) * length) + length;
+    }
 
     public void setCrossWord(Grid grid) {
         this.crossWords = new ArrayList<GridWord>();
@@ -92,7 +119,7 @@ public class GridWord extends ArrayList<WhiteCell> {
         }
     }
 
-    public List<GridWord> getTransverseWords() {
+    public List<GridWord> getCrossWords() {
         return this.crossWords;
     }
 

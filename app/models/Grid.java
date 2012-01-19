@@ -3,6 +3,7 @@ package models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
@@ -231,6 +232,65 @@ public class Grid extends ArrayList<Cell> {
 
             this.dictionary = dictionary;
 
+            Stack<GridWord> solved = new Stack<GridWord>();
+            Stack<GridWord> toSolve = new Stack<GridWord>();
+            toSolve.addAll(this.words);
+
+            while (solved.size() < this.words.size()) {
+
+                System.out.println(solved.size() + "/" + this.words.size());
+
+                this.sortWordsByComplexity(toSolve);
+
+                GridWord gridWord = toSolve.pop();
+                gridWord.savePreviousContent();
+
+                LinkedList<String> domain = dictionary.find(gridWord.contentAsString(), gridWord.getNotIn());
+                Collections.shuffle(domain);
+
+                boolean finded = false;
+
+                for (String word : domain) {
+
+                    gridWord.setContent(word);
+
+                    boolean matchAllCrossWords = true;
+                    for (GridWord crossWord : gridWord.getCrossWords()) {
+                        if (!dictionary.match(crossWord.contentAsString(), crossWord.getNotIn())) {
+                            matchAllCrossWords = false;
+                            break;
+                        }
+
+                    }
+
+                    if (matchAllCrossWords) {
+                        finded = true;
+                        break;
+                    }
+
+                }
+
+                if (finded) {
+                    solved.push(gridWord);
+
+                }
+                else {
+
+                    System.out.println("BACKTRACK");
+
+                    gridWord.loadPreviousContent();
+                    gridWord.clearNotIn();
+                    toSolve.push(gridWord);
+                    if (solved.size() > 0) {
+                        GridWord previousSolvedWord = solved.pop();
+                        previousSolvedWord.addNotIn(previousSolvedWord.contentAsString());
+                        previousSolvedWord.loadPreviousContent();
+                        toSolve.push(previousSolvedWord);
+                    }
+                }
+
+            }
+
         }
     }
 
@@ -256,7 +316,7 @@ public class Grid extends ArrayList<Cell> {
 
             for (GridWord gridWord : this.words) {
                 String word = gridWord.contentAsString();
-                if (!this.dictionary.checkWord(word)) {
+                if (!this.dictionary.match(word)) {
                     if (solved) {
                         solved = false;
                     }

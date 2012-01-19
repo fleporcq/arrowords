@@ -1,87 +1,56 @@
 package models;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import jregex.Matcher;
 import jregex.Pattern;
 
 public class Dictionary {
 
-    // private static final int WORD_MAX_LENGTH = 25;
-    private String content;
+    private static String content;
+
+    private static final int MAXRESULT = 300000;
 
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
-        // this.setDistribution(WORD_MAX_LENGTH);
     }
 
-    public List<String> findAll(String search) {
-
-        List<String> matches = new ArrayList<String>();
-
+    public Matcher search(String search) {
         Pattern pattern = new Pattern("^" + search + "$", "m");
+        return pattern.matcher(this.content);
+    }
 
-        Matcher matcher = pattern.matcher(this.content);
+    public LinkedList<String> find(String search) {
 
-        while (matcher.find()) {
+        Matcher matcher = this.search(search);
+
+        LinkedList<String> matches = new LinkedList<String>();
+        int i = 0;
+        while (matcher.find() && i < MAXRESULT) {
+            i++;
             matches.add(matcher.toString());
         }
 
         return matches;
     }
 
-    public String getRandomWord(String search) {
+    public LinkedList<String> find(String search, List<String> notIn) {
 
-        List<String> allWords = this.findAll(search);
-        Random random = new Random();
-        int countMatches = allWords.size();
+        LinkedList<String> matches = this.find(search);
 
-        if (countMatches > 0) {
-            return allWords.get(random.nextInt(countMatches));
-        }
-        return null;
-
-    }
-
-    public String getRandomWord(String search, List<String> notIn) {
-
-        String word = null;
-
-        List<String> allWords = this.findAll(search);
-
-        int i = 0;
-
-        while (word == null && i < allWords.size()) {
-            i++;
-            Random random = new Random();
-            int randomIndex = random.nextInt(allWords.size());
-            String possibleWord = allWords.get(randomIndex);
-            if (notIn == null || notIn.size() == 0 || !notIn.contains(possibleWord)) {
-                word = possibleWord;
-            }
+        if (notIn != null && notIn.size() > 0) {
+            matches.removeAll(notIn);
         }
 
-        return word;
+        return matches;
     }
 
-    // private void setDistribution(int maxLength) {
-    //
-    // for (int lettersCount = 1; lettersCount <= maxLength; lettersCount++) {
-    // StringBuilder pattern = new StringBuilder();
-    // for (int j = 0; j < lettersCount; j++) {
-    // pattern.append(".");
-    // }
-    // int wordsCount = this.findAll(pattern.toString()).size();
-    //
-    // Float complexity = Float.valueOf(wordsCount) / lettersCount;
-    //
-    // Logger.info("Length : %s, Count : %s, Complexity : %s", lettersCount, wordsCount, complexity);
-    // }
-    // }
+    public boolean match(String search) {
+        return this.search(search).find();
+    }
 
-    public boolean checkWord(String word) {
-        return (this.findAll(word).size() > 0) ? true : false;
+    public boolean match(String search, List<String> notIn) {
+        return this.find(search, notIn).size() > 0 ? true : false;
     }
 }
