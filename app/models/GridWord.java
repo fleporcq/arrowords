@@ -13,10 +13,10 @@ public class GridWord extends ArrayList<WhiteCell> {
 
     private String previousContent;
 
-    private List<String> notIn;
+    private StringBuilder notIn;
 
     public GridWord() {
-        this.notIn = new ArrayList<String>();
+        this.notIn = new StringBuilder();
     }
 
     public void savePreviousContent() {
@@ -31,15 +31,18 @@ public class GridWord extends ArrayList<WhiteCell> {
     }
 
     public void addNotIn(String word) {
-        this.notIn.add(word);
+        if (this.notIn.length() > 0) {
+            this.notIn.append("|");
+        }
+        this.notIn.append(word);
     }
 
     public void clearNotIn() {
-        this.notIn.clear();
+        this.notIn = new StringBuilder();
     }
 
-    public List<String> getNotIn() {
-        return this.notIn;
+    public String getNotIn() {
+        return this.notIn.toString();
     }
 
     public Axis getAxis() {

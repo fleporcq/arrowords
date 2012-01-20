@@ -9,7 +9,7 @@ public class Application extends Controller {
     public static void index() {
 
         // Création d'une grille
-        Grid grid = new Grid(10, 10, 2);
+        Grid grid = new Grid(5, 5, 2);
 
         // Génération pseudo aléatoire des cases noires
         grid.generatePseudoRandomBlackCells(20, 3, 4);
@@ -18,7 +18,7 @@ public class Application extends Controller {
         grid.createGridWords();
 
         // Résolution de la grille
-        Dictionary dictionary = new Dictionary("fr.txt");
+        Dictionary dictionary = new Dictionary("fr_small.txt");
         grid.solve(dictionary);
 
         // Vérification de la solution

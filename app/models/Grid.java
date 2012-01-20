@@ -281,6 +281,7 @@ public class Grid extends ArrayList<Cell> {
                     gridWord.loadPreviousContent();
                     gridWord.clearNotIn();
                     toSolve.push(gridWord);
+
                     if (solved.size() > 0) {
                         GridWord previousSolvedWord = solved.pop();
                         previousSolvedWord.addNotIn(previousSolvedWord.contentAsString());
