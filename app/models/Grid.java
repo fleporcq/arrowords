@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 import play.Logger;
 import enums.Axis;
@@ -25,6 +26,8 @@ public class Grid extends ArrayList<Cell> {
     private List<GridWord> words;
 
     private Dictionary dictionary;
+
+    private Long time;
 
     public Grid(int width, int height, int wordMinLength) {
 
@@ -230,12 +233,14 @@ public class Grid extends ArrayList<Cell> {
 
         if (dictionary != null) {
 
+            this.startChrono();
+
             this.dictionary = dictionary;
 
             Stack<GridWord> solved = new Stack<GridWord>();
             Stack<GridWord> toSolve = new Stack<GridWord>();
             toSolve.addAll(this.words);
-
+            boolean backtrack = false;
             while (solved.size() < this.words.size()) {
 
                 System.out.println(solved.size() + "/" + this.words.size());
@@ -243,9 +248,15 @@ public class Grid extends ArrayList<Cell> {
                 this.sortWordsByComplexity(toSolve);
 
                 GridWord gridWord = toSolve.pop();
+                if (backtrack) {
+                    gridWord.addNotIn();
+                    gridWord.loadPreviousContent();
+                    backtrack = false;
+                }
                 gridWord.savePreviousContent();
 
                 LinkedList<String> domain = dictionary.find(gridWord.contentAsString(), gridWord.getNotIn());
+
                 Collections.shuffle(domain);
 
                 boolean finded = false;
@@ -272,12 +283,9 @@ public class Grid extends ArrayList<Cell> {
 
                 if (finded) {
                     solved.push(gridWord);
-                    // gridWord.addNotIn();
                 }
                 else {
-
-                    System.out.println("BACKTRACK");
-
+                    backtrack = true;
                     gridWord.loadPreviousContent();
 
                     toSolve.push(gridWord);
@@ -285,13 +293,14 @@ public class Grid extends ArrayList<Cell> {
                     if (solved.size() > 0) {
                         GridWord previousSolvedWord = solved.pop();
                         gridWord.clearNotIn();
-                        previousSolvedWord.addNotIn();
-                        previousSolvedWord.loadPreviousContent();
                         toSolve.push(previousSolvedWord);
                     }
+
                 }
 
             }
+
+            this.stopChrono();
 
         }
     }
@@ -299,11 +308,6 @@ public class Grid extends ArrayList<Cell> {
     private void sortWordsByComplexity(Stack<GridWord> wordsToSolve) {
         Collections.sort(wordsToSolve, new Comparator<GridWord>() {
             @Override
-            // public int compare(GridWord gw1, GridWord gw2) {
-            // Float c1 = Float.valueOf(gw1.getMyComplexity());
-            // Float c2 = Float.valueOf(gw2.getMyComplexity());
-            // return c2.compareTo(c1);
-            // }
             public int compare(GridWord gw1, GridWord gw2) {
                 Float c1 = gw1.getComplexity();
                 Float c2 = gw2.getComplexity();
@@ -367,4 +371,17 @@ public class Grid extends ArrayList<Cell> {
         this.height = height;
     }
 
+    public void startChrono() {
+        this.time = System.nanoTime();
+
+    }
+
+    public void stopChrono() {
+
+        this.time = System.nanoTime() - this.time;
+    }
+
+    public Long getChrono() {
+        return TimeUnit.MILLISECONDS.convert(this.time, TimeUnit.NANOSECONDS);
+    }
 }
