@@ -28,6 +28,7 @@
     <li>Nombre de cases total = ${grid.size()}</li>
     <li>Nombre de cases noires = ${grid.countBlackCells()}</li>
     <li>Pourcentage de cases noires = ${grid.countBlackCells()/grid.size()*100}%</li>
+    <li>Temps de résolution = ${grid.getChrono()/1000} s</li>
 </ul>
 <table class="grid">
 #{list items:1..grid.getHeight(), as:'y'}

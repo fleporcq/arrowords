@@ -11,7 +11,7 @@ public class Dictionary {
 
     private static String content;
 
-    private static final int MAXRESULT = 300;
+    private static final int MAXRESULT = 300000;
 
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
@@ -61,7 +61,6 @@ public class Dictionary {
             pattern.append(notIn);
             pattern.append(")");
         }
-        // System.out.println(pattern.toString());
         return pattern.toString();
     }
 
