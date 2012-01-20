@@ -30,11 +30,11 @@ public class GridWord extends ArrayList<WhiteCell> {
         }
     }
 
-    public void addNotIn(String word) {
+    public void addNotIn() {
         if (this.notIn.length() > 0) {
             this.notIn.append("|");
         }
-        this.notIn.append(word);
+        this.notIn.append(this.contentAsString());
     }
 
     public void clearNotIn() {

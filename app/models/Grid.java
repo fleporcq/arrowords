@@ -272,19 +272,20 @@ public class Grid extends ArrayList<Cell> {
 
                 if (finded) {
                     solved.push(gridWord);
-
+                    // gridWord.addNotIn();
                 }
                 else {
 
                     System.out.println("BACKTRACK");
 
                     gridWord.loadPreviousContent();
-                    gridWord.clearNotIn();
+
                     toSolve.push(gridWord);
 
                     if (solved.size() > 0) {
                         GridWord previousSolvedWord = solved.pop();
-                        previousSolvedWord.addNotIn(previousSolvedWord.contentAsString());
+                        gridWord.clearNotIn();
+                        previousSolvedWord.addNotIn();
                         previousSolvedWord.loadPreviousContent();
                         toSolve.push(previousSolvedWord);
                     }

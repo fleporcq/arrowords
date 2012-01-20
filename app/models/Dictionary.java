@@ -61,6 +61,7 @@ public class Dictionary {
             pattern.append(notIn);
             pattern.append(")");
         }
+        // System.out.println(pattern.toString());
         return pattern.toString();
     }
 
