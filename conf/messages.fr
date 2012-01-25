@@ -1,0 +1,9 @@
+WIDTH=Largeur
+HEIGHT=Hauteur
+START=Démarrer
+STOP=Arrêter
+SOLVE=Résoudre
+GENERATE=Générer
+ELAPSED_TIME=Temps écoulé
+SOLVED=Résolus
+PROGRESSION=Progression

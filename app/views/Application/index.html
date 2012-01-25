@@ -28,8 +28,8 @@
     <li>Nombre de cases total = ${grid.size()}</li>
     <li>Nombre de cases noires = ${grid.countBlackCells()}</li>
     <li>Pourcentage de cases noires = ${grid.countBlackCells()/grid.size()*100}%</li>
-    <li>Temps de résolution = ${grid.getChrono()/1000} s</li>
 </ul>
+<a href="@{Application.index}">Générer une autre grille</a>
 <table class="grid">
 #{list items:1..grid.getHeight(), as:'y'}
     <tr>
@@ -42,3 +42,7 @@
     </tr>
 #{/list}
 </table>
+#{form @Application.solve(), id:'grid-solver'}
+<input type="text" name="jsonGrid" value="${grid.getAsJson()}" />
+<input type="submit" value="Résoudre" />
+#{/form}

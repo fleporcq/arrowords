@@ -11,6 +11,10 @@ public class WhiteCell extends Cell {
         this.letter = '.';
     }
 
+    public WhiteCell(char letter) {
+        this.letter = letter;
+    }
+
     public char getLetter() {
         return this.letter;
     }

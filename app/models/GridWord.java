@@ -98,18 +98,6 @@ public class GridWord extends ArrayList<WhiteCell> {
         return lettersCount;
     }
 
-    public Float getComplexity() {
-        int lettersCount = this.countLetters();
-        int length = this.getLength();
-        return lettersCount / Float.valueOf(length);
-    }
-
-    public int getMyComplexity() {
-        int lettersCount = this.countLetters();
-        int length = this.getLength();
-        return ((lettersCount + 1) * length) + length;
-    }
-
     public void setCrossWord(Grid grid) {
         this.crossWords = new ArrayList<GridWord>();
         for (WhiteCell cell : this) {

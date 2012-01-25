@@ -2,14 +2,17 @@ package models;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
-import java.util.concurrent.TimeUnit;
 
 import play.Logger;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import enums.Axis;
 import enums.Direction;
 
@@ -25,21 +28,47 @@ public class Grid extends ArrayList<Cell> {
 
     private List<GridWord> words;
 
-    private Dictionary dictionary;
-
-    private Long time;
-
     public Grid(int width, int height, int wordMinLength) {
-
-        if (wordMinLength < 2) {
-            Logger.error("La longueur minimale d'un mot doit être 2");
-        }
 
         this.width = width;
         this.height = height;
 
         this.wordMinLength = wordMinLength;
 
+        this.init();
+
+    }
+
+    public Grid(String jsonString) {
+
+        JsonParser parser = new JsonParser();
+        JsonObject json = (JsonObject) parser.parse(jsonString);
+        this.width = json.get("width").getAsInt();
+        this.height = json.get("height").getAsInt();
+        this.wordMinLength = json.get("wordMinLength").getAsInt();
+
+        this.init();
+
+        JsonArray blackCells = json.get("blackCells").getAsJsonArray();
+        JsonArray whiteCells = json.get("whiteCells").getAsJsonArray();
+
+        for (JsonElement jsonBlackCell : blackCells) {
+            int x = ((JsonObject) jsonBlackCell).get("x").getAsInt();
+            int y = ((JsonObject) jsonBlackCell).get("y").getAsInt();
+            this.setBlackCell(x, y);
+        }
+
+        for (JsonElement jsonWhiteCell : whiteCells) {
+            int x = ((JsonObject) jsonWhiteCell).get("x").getAsInt();
+            int y = ((JsonObject) jsonWhiteCell).get("y").getAsInt();
+            char letter = ((JsonObject) jsonWhiteCell).get("letter").getAsCharacter();
+            this.setWhiteCell(x, y, letter);
+        }
+
+        this.createGridWords();
+    }
+
+    private void init() {
         // Calcul de la capacité
         int capacity = this.width * this.height;
 
@@ -51,66 +80,34 @@ public class Grid extends ArrayList<Cell> {
         for (int i = 0; i < capacity; i++) {
             this.setWhiteCell(this.getXForIndex(i), this.getYForIndex(i));
         }
-
     }
 
-    public Cell getCell(int x, int y) {
-        int index;
-        Cell cell = null;
-        try {
-            index = this.getIndexForPosition(x, y);
-            cell = this.get(index);
-        }
-        catch (IndexOutOfBoundsException e) {
+    public JsonObject getAsJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("width", this.width);
+        json.addProperty("height", this.height);
+        json.addProperty("wordMinLength", this.wordMinLength);
 
-        }
-        return cell;
-    }
+        JsonArray blackCells = new JsonArray();
+        JsonArray whiteCells = new JsonArray();
 
-    public WhiteCell setWhiteCell(int x, int y) {
-        WhiteCell whiteCell = new WhiteCell();
-        whiteCell.setX(x);
-        whiteCell.setY(y);
-        return (WhiteCell) this.setCell(whiteCell);
-    }
-
-    public BlackCell setBlackCell(int x, int y) {
-        BlackCell blackCell = new BlackCell();
-        blackCell.setX(x);
-        blackCell.setY(y);
-        return (BlackCell) this.setCell(blackCell);
-
-    }
-
-    public Cell setCell(Cell cell) {
-        int x = cell.getX();
-        int y = cell.getY();
-        if (x < 1 || x > this.width) {
-            Logger.error("x[%s] n'est pas dans la grille ", x);
-        }
-        else if (y < 1 || y > this.height) {
-            Logger.error("y[%s] n'est pas dans la grille ", y);
-        }
-        else {
-            cell.setConnectedCells(this);
-            int index = this.getIndexForPosition(x, y);
-            this.set(index, cell);
+        for (Cell cell : this) {
+            JsonObject jsonCell = new JsonObject();
+            jsonCell.addProperty("x", cell.getX());
+            jsonCell.addProperty("y", cell.getY());
             if (cell instanceof BlackCell) {
-                this.blackCellsCount++;
+                blackCells.add(jsonCell);
             }
-
-            return cell;
+            else if (cell instanceof WhiteCell) {
+                jsonCell.addProperty("letter", ((WhiteCell) cell).getLetter());
+                whiteCells.add(jsonCell);
+            }
         }
-        return null;
-    }
 
-    private void resetCell(Cell cell) {
+        json.add("blackCells", blackCells);
+        json.add("whiteCells", whiteCells);
 
-        this.setWhiteCell(cell.getX(), cell.getY());
-        // Logger.debug("Reset cell : %s", cell);
-        if (cell instanceof BlackCell) {
-            this.blackCellsCount--;
-        }
+        return json;
     }
 
     public void generatePseudoRandomBlackCells(int percent, int maxAlign, int maxConnectedBlackCells) {
@@ -229,110 +226,70 @@ public class Grid extends ArrayList<Cell> {
         return false;
     }
 
-    public void solve(Dictionary dictionary) {
-
-        if (dictionary != null) {
-
-            this.startChrono();
-
-            this.dictionary = dictionary;
-
-            Stack<GridWord> solved = new Stack<GridWord>();
-            Stack<GridWord> toSolve = new Stack<GridWord>();
-            toSolve.addAll(this.words);
-            boolean backtrack = false;
-            while (solved.size() < this.words.size()) {
-
-                System.out.println(solved.size() + "/" + this.words.size());
-
-                this.sortWordsByComplexity(toSolve);
-
-                GridWord gridWord = toSolve.pop();
-                if (backtrack) {
-                    gridWord.addNotIn();
-                    gridWord.loadPreviousContent();
-                    backtrack = false;
-                }
-                gridWord.savePreviousContent();
-
-                LinkedList<String> domain = dictionary.find(gridWord.contentAsString(), gridWord.getNotIn());
-
-                Collections.shuffle(domain);
-
-                boolean finded = false;
-
-                for (String word : domain) {
-
-                    gridWord.setContent(word);
-
-                    boolean matchAllCrossWords = true;
-                    for (GridWord crossWord : gridWord.getCrossWords()) {
-                        if (!dictionary.match(crossWord.contentAsString(), crossWord.getNotIn())) {
-                            matchAllCrossWords = false;
-                            break;
-                        }
-
-                    }
-
-                    if (matchAllCrossWords) {
-                        finded = true;
-                        break;
-                    }
-
-                }
-
-                if (finded) {
-                    solved.push(gridWord);
-                }
-                else {
-                    backtrack = true;
-                    gridWord.loadPreviousContent();
-
-                    toSolve.push(gridWord);
-
-                    if (solved.size() > 0) {
-                        GridWord previousSolvedWord = solved.pop();
-                        gridWord.clearNotIn();
-                        toSolve.push(previousSolvedWord);
-                    }
-
-                }
-
-            }
-
-            this.stopChrono();
+    public Cell getCell(int x, int y) {
+        int index;
+        Cell cell = null;
+        try {
+            index = this.getIndexForPosition(x, y);
+            cell = this.get(index);
+        }
+        catch (IndexOutOfBoundsException e) {
 
         }
+        return cell;
     }
 
-    private void sortWordsByComplexity(Stack<GridWord> wordsToSolve) {
-        Collections.sort(wordsToSolve, new Comparator<GridWord>() {
-            @Override
-            public int compare(GridWord gw1, GridWord gw2) {
-                Float c1 = gw1.getComplexity();
-                Float c2 = gw2.getComplexity();
-                return c1.compareTo(c2);
-            }
-        });
+    public WhiteCell setWhiteCell(int x, int y) {
+        WhiteCell whiteCell = new WhiteCell();
+        whiteCell.setX(x);
+        whiteCell.setY(y);
+        return (WhiteCell) this.setCell(whiteCell);
     }
 
-    public boolean checkSolution() {
-        boolean solved = true;
-        if (this.dictionary != null) {
+    public WhiteCell setWhiteCell(int x, int y, char letter) {
+        WhiteCell whiteCell = new WhiteCell(letter);
+        whiteCell.setX(x);
+        whiteCell.setY(y);
+        return (WhiteCell) this.setCell(whiteCell);
+    }
 
-            for (GridWord gridWord : this.words) {
-                String word = gridWord.contentAsString();
-                if (!this.dictionary.match(word)) {
-                    if (solved) {
-                        solved = false;
-                    }
-                    Logger.info("The word '%s' doesn't exist in the dictionary", word);
-                }
-            }
-            return solved;
+    public BlackCell setBlackCell(int x, int y) {
+        BlackCell blackCell = new BlackCell();
+        blackCell.setX(x);
+        blackCell.setY(y);
+        return (BlackCell) this.setCell(blackCell);
+
+    }
+
+    public Cell setCell(Cell cell) {
+        int x = cell.getX();
+        int y = cell.getY();
+        if (x < 1 || x > this.width) {
+            Logger.error("x[%s] n'est pas dans la grille ", x);
         }
-        Logger.debug("Dictionary is null");
-        return false;
+        else if (y < 1 || y > this.height) {
+            Logger.error("y[%s] n'est pas dans la grille ", y);
+        }
+        else {
+            cell.setConnectedCells(this);
+            int index = this.getIndexForPosition(x, y);
+            this.set(index, cell);
+            if (cell instanceof BlackCell) {
+                this.blackCellsCount++;
+            }
+
+            return cell;
+        }
+        return null;
+    }
+
+    private void resetCell(Cell cell) {
+
+        this.setWhiteCell(cell.getX(), cell.getY());
+        // Logger.debug("Reset cell : %s", cell);
+        if (cell instanceof BlackCell) {
+            this.blackCellsCount--;
+        }
     }
 
     public List<GridWord> getWords() {
@@ -371,17 +328,4 @@ public class Grid extends ArrayList<Cell> {
         this.height = height;
     }
 
-    public void startChrono() {
-        this.time = System.nanoTime();
-
-    }
-
-    public void stopChrono() {
-
-        this.time = System.nanoTime() - this.time;
-    }
-
-    public Long getChrono() {
-        return TimeUnit.MILLISECONDS.convert(this.time, TimeUnit.NANOSECONDS);
-    }
 }

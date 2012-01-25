@@ -1,0 +1,242 @@
+#{extends 'main.html' /}
+#{set title:'Grids' /}
+#{set 'moreStyles'}
+    #{get 'moreStyles' /}
+<style type="text/css">
+    table#grid{
+        border-collapse:collapse;
+        font-family: arial, Helvetica,sans-serif; 
+        font-size:25px;
+    }
+    table#grid td{
+        width:50px;
+        height:50px;
+        text-align:center;
+        vertical-align:middle;
+        border: 1px solid #D1D1D1;
+
+    }
+    table#grid td.black-cell{
+        background:#666;
+        color:#000;
+    }
+    table#grid td.white-cell{
+        background:#FFF;
+        color:#000;
+    }
+</style>
+#{/set}
+#{set 'moreScripts'}
+    #{get 'moreScripts' /}
+    <script type="text/javascript">
+    var gridBuilder = {
+    
+    	gridContainer : null,
+    	infosContainers : {
+            elapsedTime : null,
+            solvedCount : null,
+            solvedPercentage : null 
+    	},
+    	buttons : {
+            generate : null,
+            start : null,
+            stop : null
+    	},
+        grid : null,
+        
+        create : function(grid){
+            var self = this;
+            self.grid = grid;
+            this._init();
+            this._setCells();
+
+        },
+        _init : function(){
+            
+            var self = this;
+                       
+            self.gridContainer.empty();  
+        
+            var table = $('<table></table>').attr("id","grid");
+
+            for(var y = 1 ; y <= self.grid.height ; y++){
+                var row = $('<tr></tr>');
+                
+                for(var x = 1 ; x <= self.grid.width ; x++){
+                    var col = $('<td></td>').attr("data-x",x).attr("data-y",y);
+                    row.append(col);
+                }
+                table.append(row);
+            }
+            
+            self.gridContainer.append(table);  
+            
+        },
+        _setCells : function(){
+            
+            var self = this;
+            
+            $(self.grid.blackCells).each(function(i,blackCell){
+                self._setBlackCell(blackCell);
+            });
+            $(self.grid.whiteCells).each(function(i,whiteCell){
+                self._setWhiteCell(whiteCell);
+            });
+            
+        },
+        _getCell : function(x,y){
+            var self = this;
+            return $('table#grid td[data-x='+x+'][data-y='+y+']',self.gridContainer);
+        },
+        _setBlackCell : function(blackCell){
+            var self = this;
+             self._getCell(blackCell.x,blackCell.y).addClass("black-cell");
+        },
+        _setWhiteCell : function(whiteCell){
+            var self = this;
+             self._getCell(whiteCell.x,whiteCell.y).text(whiteCell.letter).addClass("white-cell");
+        },
+        _updateWhiteCell : function(whiteCell){
+            var self = this;
+             self._getCell(whiteCell.x,whiteCell.y).text(whiteCell.letter);
+        },
+        _updateGrid : function(grid){
+        	var self = this;
+        	self.grid = grid;
+            $(self.grid.whiteCells).each(function(i,whiteCell){
+                self._updateWhiteCell(whiteCell);
+            });
+        },
+        _updateInfos: function(infos){
+        	var self = this;
+        	self.infosContainers.elapsedTime.text(infos.elapsedTime/1000+"s");
+        	self.infosContainers.solvedCount.text(infos.solvedCount+"/"+infos.totalCount);
+        	self.infosContainers.solvedPercentage.text(parseInt(infos.solvedCount/infos.totalCount*100)+"%"); 
+        },
+        updateButtonsStates : function(processing){
+        	var self = this;
+        	if(processing){
+                self.buttons.start.attr("disabled","disabled");
+                self.buttons.stop.removeAttr("disabled");  
+                self.buttons.generate.attr("disabled","disabled");   		
+        	}else{
+        		self.buttons.start.removeAttr("disabled");
+        		self.buttons.stop.attr("disabled","disabled");
+        		self.buttons.generate.removeAttr("disabled");
+        	}
+        },
+        listen : function(url,solverId,delay){
+        	var self = this;
+
+	            $.ajax({
+	                url : url,
+	                data : {
+	                    solverId : solverId
+	                },
+	                dataType : "text",
+	                success:function(solver){
+	                	var solver = $.parseJSON(solver);
+	                	if(solver != null){
+	                	    
+	                		self._updateGrid(solver.grid);
+	                		self._updateInfos(solver.infos);
+		                	
+	                		if(!solver.solved){
+		                		 setTimeout(function(){self.listen(url,solverId,delay)},delay);
+		                	}else{
+		                		self.updateButtonsStates(false);
+		                	}
+		                }
+	                	
+	                }
+	            });
+  
+        }
+    
+    }
+    $(document).ready(function(){
+    	
+    	gridBuilder.gridContainer = $('#grid-container');
+    	gridBuilder.infosContainers.elapsedTime = $('#elapsed-time');
+    	gridBuilder.infosContainers.solvedCount = $('#solved-count');
+    	gridBuilder.infosContainers.solvedPercentage = $('#solved-percentage');
+    	gridBuilder.progressbar = $('#solver-progressbar');
+    	gridBuilder.buttons.generate = $('#button-generate');
+    	gridBuilder.buttons.start = $('#button-start');
+    	gridBuilder.buttons.stop = $('#button-stop');
+
+    	
+	    $('#grid-generator').bind("submit",function(event){
+	       event.preventDefault();
+	       var form = $(this);
+	       $.ajax({
+	           url : form.attr("action"),
+	           type : form.attr("method"),
+	           dataType : "text",
+	           data : form.serialize(),
+	           success: function(grid){
+                    gridBuilder.create($.parseJSON(grid));
+                    $('#grid-json').val(grid);
+                    gridBuilder.updateButtonsStates(false);
+               }
+	       });
+	    });
+	    $('#grid-solver').bind("submit",function(event){
+           event.preventDefault();
+           var form = $(this);
+           $.ajax({
+               url : form.attr("action"),
+               type : form.attr("method"),
+               dataType : "text",
+               data : form.serialize(),
+               success: function(solverId){
+            	   gridBuilder.listen("@{Grids.getProgression()}",solverId,0);
+            	   $('#solver-id').val(solverId);
+            	   gridBuilder.updateButtonsStates(true);
+               }
+           });
+           
+        });
+	    $('#grid-stopper').bind("submit",function(event){
+	           event.preventDefault();
+	           var form = $(this);
+	           $.ajax({
+	               url : form.attr("action"),
+	               type : form.attr("method"),
+	               data : form.serialize(),
+	               success: function(){
+	            	   gridBuilder.updateButtonsStates(false);
+	               }
+	           });
+	           
+	        });
+    });
+    </script>
+#{/set}
+
+
+#{form @Grids.generate(),id:'grid-generator'}
+	<label for="grid-width">&{'WIDTH'}</label><input type="text" id="grid-width" name="width" value="6"/>
+	<label for="grid-height">&{'HEIGHT'}</label><input type="text" id="grid-height" name="height" value="5"/>
+	<input id="button-generate" type="submit" value="&{'GENERATE'}"/>
+#{/form}
+#{form @Grids.solve(),id:'grid-solver'}
+    <input type="hidden" id="grid-json" name="jsonGrid" value=""/>
+    <input id="button-start" type="submit" value="&{'SOLVE'}" disabled="disabled"/>
+#{/form}
+#{form @Grids.stop(),id:'grid-stopper'}
+    <input type="hidden" id="solver-id" name="solverId" value=""/>
+    <input id="button-stop" type="submit" value="&{'STOP'}" disabled="disabled" />
+#{/form}
+<div id="solver-progressbar"></div>
+<div id="solver-info">
+    <label>&{'ELAPSED_TIME'} : </label><span id="elapsed-time"></span><br/>
+    <label>&{'SOLVED'} : </label><span id="solved-count"></span><br/>
+    <label>&{'PROGRESSION'} : </label><span id="solved-percentage"></span>
+</div>
+<div id="grid-container"></div>
+<ul>
+#{list solvers, as:'solver'}
+    <li>${solver.getId()}</li>
+#{/list}
+</ul>
