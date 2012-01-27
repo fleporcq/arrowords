@@ -1,0 +1,21 @@
+table#grid{
+    border-collapse:collapse;
+    font-family: arial, Helvetica,sans-serif; 
+    font-size:25px;
+}
+table#grid td{
+    width:50px;
+    height:50px;
+    text-align:center;
+    vertical-align:middle;
+    border: 1px solid #D1D1D1;
+
+}
+table#grid td.black-cell{
+    background:#666;
+    color:#000;
+}
+table#grid td.white-cell{
+    background:#FFF;
+    color:#000;
+}

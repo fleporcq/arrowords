@@ -7,3 +7,4 @@ GENERATE=Générer
 ELAPSED_TIME=Temps écoulé
 SOLVED=Résolus
 PROGRESSION=Progression
+BLACK_CELLS_PERCENT=Pourcentage de cases noires

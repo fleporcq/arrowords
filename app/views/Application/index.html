@@ -1,48 +1,117 @@
 #{extends 'main.html' /}
-#{set title:'Home' /}
-<style type="text/css">
-    table.grid{
-        border-collapse:collapse;
-        font-family: arial, Helvetica,sans-serif; 
-        font-size:25px;
-    }
-    table.grid td{
-        width:50px;
-        height:50px;
-        text-align:center;
-        vertical-align:middle;
-        border: 1px solid #D1D1D1;
+#{set title:'Grids' /}
+#{set 'moreStyles'}
+    #{get 'moreStyles' /}
+    <link rel="stylesheet" type="text/css" media="screen" href="@{'public/stylesheets/grid.css'}" />
+#{/set}
+#{set 'moreScripts'}
+    #{get 'moreScripts' /}
+    <script type="text/javascript" src="@{'public/javascripts/gridbuilder.js'}"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+    	
+    	gridBuilder.gridContainer = $('#grid-container');
+    	gridBuilder.infosContainers.elapsedTime = $('#elapsed-time');
+    	gridBuilder.infosContainers.solvedCount = $('#solved-count');
+    	gridBuilder.infosContainers.solvedPercentage = $('#solved-percentage');
+    	gridBuilder.progressbar = $('#solver-progressbar');
+    	gridBuilder.buttons.generate = $('#button-generate');
+    	gridBuilder.buttons.start = $('#button-start');
+    	gridBuilder.buttons.stop = $('#button-stop');
 
-    }
-    table.grid td.black-cell{
-        /*background:#FFFFC9;*/
-        background:#666;
-        color:#000;
-    }
-    table.grid td.white-cell{
-        background:#FFF;
-        color:#000;
-    }
-</style>
-<ul>
-    <li>Nombre de cases total = ${grid.size()}</li>
-    <li>Nombre de cases noires = ${grid.countBlackCells()}</li>
-    <li>Pourcentage de cases noires = ${grid.countBlackCells()/grid.size()*100}%</li>
-</ul>
-<a href="@{Application.index}">Générer une autre grille</a>
-<table class="grid">
-#{list items:1..grid.getHeight(), as:'y'}
-    <tr>
-    #{list items:1..grid.getWidth(), as:'x'}
-        #{set cell:grid.getCell(x,y)/}
-        <td class="${(cell instanceof models.BlackCell) ? 'black' : 'white'}-cell" title="(${cell.getX()},${cell.getY()})">
-            ${(cell instanceof models.WhiteCell) ? cell.getLetter() : ''}
-        </td>
-    #{/list}
-    </tr>
-#{/list}
-</table>
-#{form @Application.solve(), id:'grid-solver'}
-<input type="text" name="jsonGrid" value="${grid.getAsJson()}" />
-<input type="submit" value="Résoudre" />
+    	
+	    $('#grid-generator').bind("submit",function(event){
+	       event.preventDefault();
+	       var form = $(this);
+	       $.ajax({
+	           url : form.attr("action"),
+	           type : form.attr("method"),
+	           dataType : "text",
+	           data : form.serialize(),
+	           success: function(grid){
+                    gridBuilder.create($.parseJSON(grid));
+                    $('#grid-json').val(grid);
+                    gridBuilder.updateButtonsStates(false);
+               }
+	       });
+	    });
+	    $('#grid-solver').bind("submit",function(event){
+           event.preventDefault();
+           var form = $(this);
+           $.ajax({
+               url : form.attr("action"),
+               type : form.attr("method"),
+               dataType : "text",
+               data : form.serialize(),
+               success: function(solverId){
+            	   gridBuilder.listen("@{Application.getProgression()}",solverId,0);
+            	   $('#solver-id').val(solverId);
+            	   gridBuilder.updateButtonsStates(true);
+               }
+           });
+           
+        });
+	    $('#grid-stopper').bind("submit",function(event){
+	           event.preventDefault();
+	           var form = $(this);
+	           $.ajax({
+	               url : form.attr("action"),
+	               type : form.attr("method"),
+	               data : form.serialize(),
+	               success: function(){
+	            	   gridBuilder.updateButtonsStates(false);
+	               }
+	           });
+	           
+	        });
+    });
+    </script>
+#{/set}
+
+
+#{form @Application.generate(),id:'grid-generator'}
+	<label for="grid-width">&{'WIDTH'}</label>
+	<select id="grid-width" name="width" data-min="${controllers.Application.MIN_WIDTH}" data-max="${controllers.Application.MAX_WIDTH}">
+	   #{list items:controllers.Application.MIN_WIDTH..controllers.Application.MAX_WIDTH, as:'i'}
+            <option value="${i}" #{if i==controllers.Application.DEFAULT_WIDTH}selected="selected"#{/if}>${i}</option>
+        #{/list}
+	</select>
+	<label for="grid-height">&{'HEIGHT'}</label>
+    <select id="grid-height" name="height" data-min="${controllers.Application.MIN_HEIGHT}" data-max="${controllers.Application.MAX_HEIGHT}">
+       #{list items:controllers.Application.MIN_HEIGHT..controllers.Application.MAX_HEIGHT, as:'i'}
+            <option value="${i}" #{if i==controllers.Application.DEFAULT_HEIGHT}selected="selected"#{/if}>${i}</option>
+        #{/list}
+    </select>
+    <label for="grid-black-cells-percent">&{'BLACK_CELLS_PERCENT'}</label>
+    <select id="grid-black-cells-percent" name="blackCellsPercent" data-min="${controllers.Application.MIN_BLACK_CELLS_PERCENT}" data-max="${controllers.Application.MAX_BLACK_CELLS_PERCENT}">
+       #{list items:controllers.Application.MIN_BLACK_CELLS_PERCENT..controllers.Application.MAX_BLACK_CELLS_PERCENT, as:'i'}
+            <option value="${i}" #{if i==controllers.Application.DEFAULT_BLACK_CELLS_PERCENT}selected="selected"#{/if}>${i}</option>
+        #{/list}
+    </select>    
+	<input id="button-generate" type="submit" value="&{'GENERATE'}"/>
 #{/form}
+
+#{form @Application.solve(),id:'grid-solver'}
+    <input type="hidden" id="grid-json" name="jsonGrid" value=""/>
+    <input id="button-start" type="submit" value="&{'SOLVE'}" disabled="disabled"/>
+#{/form}
+
+#{form @Application.stop(),id:'grid-stopper'}
+    <input type="hidden" id="solver-id" name="solverId" value=""/>
+    <input id="button-stop" type="submit" value="&{'STOP'}" disabled="disabled" />
+#{/form}
+
+
+<div id="solver-info">
+    <label>&{'ELAPSED_TIME'} : </label><span id="elapsed-time"></span><br/>
+    <label>&{'SOLVED'} : </label><span id="solved-count"></span><br/>
+    <label>&{'PROGRESSION'} : </label><span id="solved-percentage"></span>
+</div>
+
+<div id="grid-container"></div>
+
+<ul>
+#{list solvers, as:'solver'}
+    <li>${solver.getId()}</li>
+#{/list}
+</ul>

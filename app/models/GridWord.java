@@ -114,6 +114,10 @@ public class GridWord extends ArrayList<WhiteCell> {
         return this.crossWords;
     }
 
+    public boolean isCrossWords(GridWord gridWord) {
+        return this.crossWords.contains(gridWord);
+    }
+
     @Override
     public String toString() {
         return "First cell : " + this.getFirstCell() + ", Length : " + this.getLength() + ", Axis : " + this.getAxis() + ", Content : " + this.contentAsString();

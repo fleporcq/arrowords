@@ -10,3 +10,4 @@ GENERATE=Generate
 ELAPSED_TIME=Elapsed time
 SOLVED=Solved
 PROGRESSION=Progression
+BLACK_CELLS_PERCENT=Black cells percent

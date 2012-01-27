@@ -11,8 +11,6 @@ public class Dictionary {
 
     private static String content;
 
-    private static final int MAXRESULT = 300000;
-
     public Dictionary(String filename) {
         this.content = play.vfs.VirtualFile.fromRelativePath("/app/dictionaries/" + filename).contentAsString();
     }
@@ -27,9 +25,8 @@ public class Dictionary {
         Matcher matcher = this.search(search);
 
         LinkedList<String> matches = new LinkedList<String>();
-        int i = 0;
-        while (matcher.find() && i < MAXRESULT) {
-            i++;
+
+        while (matcher.find()) {
             matches.add(matcher.toString());
         }
 

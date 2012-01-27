@@ -4,8 +4,12 @@
     <head>
         <title>#{get 'title' /}</title>
         <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" media="screen" href="@{'public/stylesheets/jquery-ui-themes/start/jquery-ui-1.8.17.custom.css'}" />
+        <link rel="stylesheet" type="text/css" media="screen" href="@{'public/stylesheets/jquery-ui-override.css'}" />
         #{get 'moreStyles' /}
         <script src="@{'/public/javascripts/jquery-1.7.1.min.js'}" type="text/javascript"></script>
+        <script src="@{'/public/javascripts/jquery-ui-1.8.17.custom.min.js'}" type="text/javascript"></script>
+        <script src="@{'/public/javascripts/init-ui.js'}" type="text/javascript"></script>
         #{get 'moreScripts' /}
     </head>
     <body>
